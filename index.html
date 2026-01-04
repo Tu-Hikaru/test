@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Chúc Mừng Sinh Nhật Ba</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
@@ -28,7 +28,7 @@ import turtle
 import random
 import time
 screen = turtle.Screen()
-screen.setworldcoordinates(-450,-350,450,350)
+screen.setworldcoordinates(-350,-350,350,350)
 
 b=turtle.Turtle()
 b.speed(0)
@@ -952,9 +952,9 @@ def blink_text():
     w_win = screen.window_width()
     h_win = screen.window_height()
     # Tính toán vị trí chữ dựa trên chiều cao thực tế của màn hình (h_win)
-    y_bot = -(h_win / 2) + (h_win * 0.04)
-    # y_top sẽ nằm cách cạnh trên màn hình khoảng 15%
-    y_top = (h_win / 2) - (h_win * 0.15)
+    y_bot = -(h_win / 2) + (h_win * 0.01)
+    # y_top sẽ nằm cách cạnh trên màn hình khoảng 30%
+    y_top = (h_win / 2) - (h_win * 0.25)
 
     # Dòng chữ chúc mừng ở DƯỚI
     writer.goto(0, y_bot)
@@ -977,21 +977,61 @@ def blink_text():
 
 
 blink_text()
-
-turtle.done()
 `;
-
+    // cấu hình Skulpt (chỉ 1 lần) -> sau khi đóng template literal
     Sk.configure({ read: builtinRead, output: console.log });
+
     (Sk.TurtleGraphics || (Sk.TurtleGraphics = {})).target = 'mycanvas';
-    (Sk.TurtleGraphics || (Sk.TurtleGraphics = {})).width = window.innerWidth;
-    (Sk.TurtleGraphics || (Sk.TurtleGraphics = {})).height = window.innerHeight;
-    
+    const targetEl = document.getElementById('mycanvas');
+    if (!targetEl) throw new Error('Element #mycanvas not found');
+    const rect = targetEl.getBoundingClientRect();
+    const cssW = Math.round(rect.width) || window.innerWidth;
+    const cssH = Math.round(rect.height) || window.innerHeight;
+    const ratio = window.devicePixelRatio || 1;
+    (Sk.TurtleGraphics || (Sk.TurtleGraphics = {})).width = Math.floor(cssW * ratio);
+    (Sk.TurtleGraphics || (Sk.TurtleGraphics = {})).height = Math.floor(cssH * ratio);
+
+    if (!document.getElementById('skulpt-canvas-style')) {
+        const canvasStyle = document.createElement('style');
+        canvasStyle.id = 'skulpt-canvas-style';
+        canvasStyle.innerHTML = `#mycanvas canvas { width: ${cssW}px !important; height: ${cssH}px !important; }`;
+        document.head.appendChild(canvasStyle);
+    }
+
     Sk.misceval.asyncToPromise(function() {
         return Sk.importMainWithBody("<stdin>", false, prog, true);
     });
 }
 window.onload = function() { setTimeout(runit, 200); };
-window.onresize = function() { location.reload(); };
+window.onresize = function() {
+    const targetEl = document.getElementById('mycanvas');
+    if (!targetEl) return;
+    const rect = targetEl.getBoundingClientRect();
+    const cssW = Math.round(rect.width) || window.innerWidth;
+    const cssH = Math.round(rect.height) || window.innerHeight;
+    const ratio = window.devicePixelRatio || 1;
+    const pixelW = Math.floor(cssW * ratio);
+    const pixelH = Math.floor(cssH * ratio);
+
+    (Sk.TurtleGraphics || (Sk.TurtleGraphics = {})).width = pixelW;
+    (Sk.TurtleGraphics || (Sk.TurtleGraphics = {})).height = pixelH;
+
+    let style = document.getElementById('skulpt-canvas-style');
+    if (!style) {
+        style = document.createElement('style');
+        style.id = 'skulpt-canvas-style';
+        document.head.appendChild(style);
+    }
+    style.innerHTML = `#mycanvas canvas { width: ${cssW}px !important; height: ${cssH}px !important; }`;
+
+    const canvas = targetEl.querySelector('canvas');
+    if (canvas) {
+        canvas.width = pixelW;
+        canvas.height = pixelH;
+        canvas.style.width = cssW + 'px';
+        canvas.style.height = cssH + 'px';
+    }
+};
 </script>
 </body>
 </html>
